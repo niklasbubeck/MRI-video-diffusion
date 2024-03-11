@@ -1,0 +1,102 @@
+unets:
+  unet1: # BASE
+    dim: 32                                                  # Base dimension of the unet
+    text_embed_dim: 1024                                       # dimension of the resnet induced embeddings
+    num_resnet_blocks: 2                                      # num of resnetblocks to use on each stage
+    dim_mults: [1,2,4]                                        # multiplicators of each stage    
+    max_text_len: 1024                                         # maximum text length
+    layer_attns: False                                        # activating layer attention
+    layer_cross_attns: [False, False, True]                   # activating layer crossattention for each stage
+    cond_images_channels: 0                                   # number of conditional input channels
+    channels: 1                                               # number of input channels that get trained on 
+    channels_out: 1                                           # number of output channels that get trained on 
+    cond_on_text: True  # for the style embeds                 # if conditioned on text 
+
+  unet2: # TSR
+    dim: 8                                                  # Base dimension of the unet
+    text_embed_dim: 1024                                       # dimension of the resnet induced embeddings
+    num_resnet_blocks: 2                                      # num of resnetblocks to use on each stage
+    dim_mults: [1,2,4]                                        # multiplicators of each stage    
+    max_text_len: 1024                                         # maximum text length
+    layer_attns: False                                        # activating layer attention
+    layer_cross_attns: [False, False, True]                   # activating layer crossattention for each stage
+    cond_images_channels: 0                                   # number of conditional input channels
+    channels: 1                                               # number of input channels that get trained on 
+    channels_out: 1                                           # number of output channels that get trained on 
+    cond_on_text: True  # for the style embeds  
+    lowres_cond: True
+
+encoders: 
+  encoder1:
+    dim: 8
+    text_embed_dim: 1024
+    num_resnet_blocks: 2
+    dim_mults: [1,2,4]
+    max_text_len: 1024
+    layer_attns: False 
+    layer_cross_attns: [False, False, True]
+    cond_images_channels: 0
+    channels: 1
+    cond_on_text: False  # for the style embeds
+  encoder2:
+    dim: 8
+    text_embed_dim: 1024
+    num_resnet_blocks: 2
+    dim_mults: [1,2,4]
+    max_text_len: 1024
+    layer_attns: False 
+    layer_cross_attns: [False, False, True]
+    cond_images_channels: 0
+    channels: 1
+    cond_on_text: False  # for the style embeds
+
+
+imagen:
+  condition_on_text: False
+  image_sizes: [64, 128]  # resolutions in the cascade: 56x56 -> 56x56 -> 56x56 -> 112x112
+  text_embed_dim: 1024
+  channels: 1
+  elucidated: True
+  num_sample_steps: [32, 64]
+  random_crop_sizes: [null, 64]
+  temporal_downsample_factor: [2, 1] # FPS in the cascade: 8fps -> 16fps -> 32fps -> 32fps
+  sigma_min: 0.002
+  sigma_max: 80
+  sigma_data: 0.25
+  rho: 7
+  P_mean: -1.2
+  P_std: 1.2
+  S_churn: [80, 80] # Determined empirically as working values
+  S_tmin: 0.05
+  S_tmax: 50
+  S_noise: 1.003
+
+trainer:
+  split_batches: False
+  lr: 5e-4
+  dl_tuple_output_keywords_names: ['images']
+
+dataset:
+  data_path: "/home/data/datasets/ukbb_partial/twelve_slice"
+  deactivate_cache: False
+  time_res: 8 # IMPORTANT CHANGE IN 1SCM: 8fps instead of 32fps
+  slice_res: 12
+  res: 128 # resolution
+  fps: 32 # frames per second
+  duration: 1 #seconds
+  grayscale: False
+
+dataloader: # This is adapted when launching the training script
+  batch_size: 8
+  num_workers: 8
+
+wandb:
+  project: "MRIDiffusion"
+  entity: "niklas-bubeck"
+
+checkpoint:
+  path: "./outputs/diffusion"
+  batch_size: 4
+  cond_scale: 5.
+  save_every_x_it: 50
+
