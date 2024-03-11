@@ -81,12 +81,14 @@ class UKBB_lmdb(Dataset):
             temp = txn.get(key)
             npz = pickle.loads(temp)
             sa = npz['sa']
+            # subject = npz['subject']
             sa = torch.from_numpy(sa).unsqueeze(0).type(torch.float)         # c, h ,w
 
             # sa = torch.repeat_interleave(sa, 3, dim=0)
-            if self.config.dataset.normalize:
-                sa = sa * 2 - 1
-        return {'img': sa, 'index': index}
+            # if self.config.dataset.normalize:
+            sa = sa * 2 - 1
+            print(sa.shape)
+        return sa, index
 
 
 class UKBBPartial(Dataset):

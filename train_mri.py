@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime
 import time
 import torch
-from torch.utils.data import DataLoader 
+from torch.utils.data import DataLoader, Subset
 import numpy as np
 from PIL import Image
 import wandb
@@ -41,7 +41,7 @@ def delay2str(t):
 
 
 def get_reference_videos(config, val_reference, indices, clamp_range=(None, None)):
-    vformat = lambda x: (x*255).permute(1,2,3,0).numpy().astype(np.uint8)
+    vformat = lambda x: (x.unsqueeze(0)*255).permute(1,2,3,0).numpy().astype(np.uint8)
     videos = [ vformat(val_reference[i]) for i in range(len(indices)) ]
     # Resize depending on unet
     undex_index = config.stage - 1 # 0 or 1
@@ -176,7 +176,10 @@ if __name__ == "__main__":
     ).to(device)
 
     dataset = UKBB_lmdb(config)
-    train_ds, val_ds = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    idxs = list(range(len(dataset)))
+    split_idx = int(0.8 * len(idxs))
+    train_ds = Subset(dataset, idxs[:split_idx])
+    val_ds = Subset(dataset, idxs[split_idx:])
 
     print("length of training set is: ", len(train_ds))
     print("length of validation set is: ", len(val_ds))
@@ -236,9 +239,9 @@ if __name__ == "__main__":
     val_data_all =[val_ds[e][:] for e in indices] 
 
     val_reference = torch.stack([val_data_all[i][0] for i in range(len(indices))])
-    val_cond_images = torch.stack([val_data_all[i][1] for i in range(len(indices))])
-    val_embeddings = torch.stack([val_data_all[i][2] for i in range(len(indices))])
-    val_fnames = [val_data_all[i][3] for i in range(len(indices))]
+    # val_cond_images = torch.stack([val_data_all[i][1] for i in range(len(indices))])
+    # val_embeddings = torch.stack([val_data_all[i][2] for i in range(len(indices))])
+    # val_fnames = [val_data_all[i][3] for i in range(len(indices))]
 
 
     videos_ref = get_reference_videos(config, val_reference, indices, clamp_range=(0,255))
@@ -263,10 +266,10 @@ if __name__ == "__main__":
     sample_kwargs["start_at_unet_number"] = config.stage
     sample_kwargs["stop_at_unet_number"] = config.stage
     sample_kwargs["encoder_images"] = val_reference
-    if config.imagen.condition_on_text:
-        sample_kwargs["text_embeds"] = val_embeddings
-    if config.unets.get(f"unet{args.stage}").get('cond_images_channels') > 0:
-        sample_kwargs["cond_images"] = val_cond_images
+    # if config.imagen.condition_on_text:
+    #     sample_kwargs["text_embeds"] = val_embeddings
+    # if config.unets.get(f"unet{args.stage}").get('cond_images_channels') > 0:
+    #     sample_kwargs["cond_images"] = val_cond_images
     if config.stage > 1: # Condition on low res image
         sample_kwargs["start_image_or_video"] = val_reference # type: ignore # TODO: might check for mistakes 
 
@@ -303,10 +306,10 @@ if __name__ == "__main__":
                     s_videos = trainer.sample(
                         batch_size=config.checkpoint.batch_size, 
                         cond_scale=config.checkpoint.cond_scale,
-                        video_frames=config.dataset.num_frames,
+                        # video_frames=config.dataset.num_frames,
                         **sample_kwargs,
                     ) # B x C x T x H x W
-                
+                s_videos = s_videos.unsqueeze(2)
                 # Upscale videos to match reference videos - if necessary
                 s_videos = torch.nn.functional.interpolate(s_videos, size=(videos_ref.shape[1],*videos_ref.shape[3:])) # type: ignore
                 
