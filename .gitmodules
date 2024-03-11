@@ -1,0 +1,3 @@
+[submodule "imagen-pytorch"]
+	path = imagen-pytorch
+	url = https://github.com/niklasbubeck/imagen-pytorch

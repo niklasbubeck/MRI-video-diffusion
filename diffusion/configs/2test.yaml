@@ -55,7 +55,7 @@ imagen:
   condition_on_text: False
   image_sizes: [64, 128]  # resolutions in the cascade: 56x56 -> 56x56 -> 56x56 -> 112x112
   text_embed_dim: 1024
-  channels: 1
+  channels: 1 
   elucidated: True
   num_sample_steps: [32, 64]
   random_crop_sizes: [null, 64]
