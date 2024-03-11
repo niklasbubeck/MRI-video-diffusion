@@ -21,8 +21,8 @@ from imagen_pytorch.imagen_pytorch import (
 )
 
 
-from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer, Imagen, DiffusionAutoEncoders3D
-from diffusion.dataset import UKBBPartial
+from imagen_pytorch import Unet3D, ElucidatedImagen, ImagenTrainer, Imagen, DiffusionAutoEncoders3D, DiffusionAutoEncoders
+from diffusion.dataset import UKBBPartial, UKBB_lmdb
 
 def delay2str(t):
     t = int(t)
@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     unets = []
     for i in range(len(encoder_infos)):
-        unets.append(DiffusionAutoEncoders3D(encoder_infos[i], unet_infos[i], lowres_cond=(i>0)))
+        unets.append(DiffusionAutoEncoders(encoder_infos[i], unet_infos[i], lowres_cond=(i>0)))
             
 
     imagen_klass = ElucidatedImagen if config.imagen.elucidated == True else Imagen
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         **config.trainer,
     ).to(device)
 
-    dataset = UKBBPartial(config)
+    dataset = UKBB_lmdb(config)
     train_ds, val_ds = torch.utils.data.random_split(dataset, [0.8, 0.2])
 
     print("length of training set is: ", len(train_ds))
