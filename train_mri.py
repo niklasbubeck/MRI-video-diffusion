@@ -306,6 +306,7 @@ if __name__ == "__main__":
                     s_videos = trainer.sample(
                         batch_size=config.checkpoint.batch_size, 
                         cond_scale=config.checkpoint.cond_scale,
+                        from_noisemap=True,
                         # video_frames=config.dataset.num_frames,
                         **sample_kwargs,
                     ) # B x C x T x H x W
